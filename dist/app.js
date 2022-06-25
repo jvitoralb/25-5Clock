@@ -14,6 +14,8 @@ var DefaultTimes;
 })(DefaultTimes || (DefaultTimes = {}));
 const SESSION = 'session';
 const BREAK = 'break';
+const DISABLE = 'disable';
+const HIDE = 'hide';
 let sessionTime;
 let breakTime;
 let timer;
@@ -55,8 +57,6 @@ sessionBreak.forEach(button => button.addEventListener('click', () => {
     let option = button.id;
     handleChanges(option);
 }));
-const HIDE = 'hide';
-const DISABLE = 'disable';
 const btnEffects = {
     disable: (status) => {
         if (status === 'on') {

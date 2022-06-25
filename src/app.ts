@@ -10,6 +10,8 @@ const warningAudio = document.querySelector('#beep') as HTMLAudioElement
 const reset = document.querySelector('#reset') as HTMLButtonElement
 
 type TimerType = 'session' | 'break'
+type Effects = 'disable' | 'hide'
+type OnOff = 'on' | 'off'
 type SetTimeID = number | undefined
 type NumOrStr = number | string
 
@@ -20,6 +22,8 @@ enum DefaultTimes {
 
 const SESSION: TimerType = 'session'
 const BREAK: TimerType = 'break'
+const DISABLE: Effects = 'disable'
+const HIDE: Effects = 'hide'
 let sessionTime: TimeLength
 let breakTime: TimeLength
 let timer: Timer
@@ -71,11 +75,6 @@ sessionBreak.forEach(button => button.addEventListener('click', (): void => {
         handleChanges(option)
     })
 )
-
-type Effects = 'disable' | 'hide'
-type OnOff = 'on' | 'off'
-const HIDE: Effects = 'hide'
-const DISABLE: Effects = 'disable'
 
 interface TimerEffectsInter {
     disable: Function
