@@ -121,6 +121,9 @@ class Timer {
         if (label) {
             timerLabel.textContent = `${this.type[0].toUpperCase()}${this.type.slice(1)}`
         }
+        /**
+         * Think in a way of this class to have access to minutes so it can render properly
+        **/
         return minutes < 10 ? timeLeft.textContent = `0${this.duration.getLength()}:00` :
         timeLeft.textContent = `${this.duration.getLength()}:00`
     }
