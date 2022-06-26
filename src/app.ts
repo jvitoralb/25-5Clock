@@ -20,6 +20,11 @@ enum DefaultTimes {
     Break = 5
 }
 
+enum Status {
+    NotStarted,
+    InProgress
+}
+
 const SESSION: TimerType = 'session'
 const BREAK: TimerType = 'break'
 const DISABLE: Effects = 'disable'
@@ -39,7 +44,7 @@ interface BreakSessionInter {
     break: Function
 }
 // Also dont like this one
-const functions: BreakSessionInter = { 
+const functions: BreakSessionInter = {
     session: (type: string, time: TimeLength): number => {
         if (type.includes('increment')) {
             return time.increment()
@@ -52,6 +57,16 @@ const functions: BreakSessionInter = {
         }
         return time.decrement()
     }
+}
+
+interface TimerStatusInter {
+    timerType: Function,
+    status: Status
+}
+
+const timerStatus: TimerStatusInter = {
+    timerType: (): TimerType => timer.getType(),
+    status: Status.NotStarted
 }
 
 const handleChanges = (option: string): void => {
@@ -71,8 +86,17 @@ const handleChanges = (option: string): void => {
 }
 
 sessionBreak.forEach(button => button.addEventListener('click', (): void => {
-        let option = button.id
-        handleChanges(option)
+    // make this a normal function
+        let option: string = button.id
+        if (timerStatus.status === 0) {
+            handleChanges(option)
+        } else {
+            /**
+             * Set a warning(tooltips or something) so the user knows it's gonna restart the timer
+             * with the new time provided and call handlechanges
+            **/
+           console.log('worked')
+        }
     })
 )
 
@@ -105,6 +129,10 @@ class Timer {
     constructor(type: TimerType, dur: TimeLength) {
         this.type = type
         this.duration = dur
+    }
+
+    getType(): TimerType {
+        return this.type
     }
 
     setTimer(): number {
@@ -142,12 +170,9 @@ class Timer {
         }
         return timeLeft.textContent = `${min}:${sec}`
     }
-
-    stop(timerID: SetTimeID): void {
-        // probably get rid of this method
-        clearInterval(timerID)
-    }
-
+    /**
+     * Stop method removed
+    **/
     switch(): number {
         if (this.type === SESSION) {
             this.type = BREAK
@@ -191,7 +216,7 @@ const timerRunning = (): void => {
     }
     seconds--
     if (seconds === 0 && minutes === 0) {
-        timer.stop(inTimerID)
+        clearInterval(inTimerID)
         inTimerID = undefined
         timerEffects(DISABLE, 'on')
         handleAudio()
@@ -207,8 +232,9 @@ const handleTimer = (): void => {
         setTimeout(timerRunning, 200)
         inTimerID = setInterval(timerRunning, 1000)
         timerEffects(HIDE, 'on')
+        timerStatus.status = Status.InProgress
     } else {
-        timer.stop(inTimerID)
+        clearInterval(inTimerID)
         inTimerID = undefined
         timerEffects(HIDE, 'off')
     }
@@ -234,6 +260,7 @@ const resetTimer = (): void => {
     inTimerID = undefined
     clearTimeout(outTimerID)
     outTimerID = undefined
+    timerStatus.status = Status.NotStarted
     handleAudio(true)
     timerEffects(HIDE, 'off', 'reset')
     minutes = DefaultTimes.Session

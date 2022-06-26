@@ -12,6 +12,11 @@ var DefaultTimes;
     DefaultTimes[DefaultTimes["Session"] = 25] = "Session";
     DefaultTimes[DefaultTimes["Break"] = 5] = "Break";
 })(DefaultTimes || (DefaultTimes = {}));
+var Status;
+(function (Status) {
+    Status[Status["NotStarted"] = 0] = "NotStarted";
+    Status[Status["InProgress"] = 1] = "InProgress";
+})(Status || (Status = {}));
 const SESSION = 'session';
 const BREAK = 'break';
 const DISABLE = 'disable';
@@ -38,6 +43,10 @@ const functions = {
         return time.decrement();
     }
 };
+const timerStatus = {
+    timerType: () => timer.getType(),
+    status: Status.NotStarted
+};
 const handleChanges = (option) => {
     /**
      * If timer is running then is paused, you can change session and/or break length, which is not ideal
@@ -54,8 +63,18 @@ const handleChanges = (option) => {
     timer.render();
 };
 sessionBreak.forEach(button => button.addEventListener('click', () => {
+    // make this a normal function
     let option = button.id;
-    handleChanges(option);
+    if (timerStatus.status === 0) {
+        handleChanges(option);
+    }
+    else {
+        /**
+         * Set a warning(tooltips or something) so the user knows it's gonna restart the timer
+         * with the new time provided and call handlechanges
+        **/
+        console.log('worked');
+    }
 }));
 const btnEffects = {
     disable: (status) => {
@@ -77,6 +96,9 @@ class Timer {
     constructor(type, dur) {
         this.type = type;
         this.duration = dur;
+    }
+    getType() {
+        return this.type;
     }
     setTimer() {
         if (this.type === SESSION) {
@@ -112,10 +134,9 @@ class Timer {
         }
         return timeLeft.textContent = `${min}:${sec}`;
     }
-    stop(timerID) {
-        // probably get rid of this method
-        clearInterval(timerID);
-    }
+    /**
+     * Stop method removed
+    **/
     switch() {
         if (this.type === SESSION) {
             this.type = BREAK;
@@ -157,7 +178,7 @@ const timerRunning = () => {
     }
     seconds--;
     if (seconds === 0 && minutes === 0) {
-        timer.stop(inTimerID);
+        clearInterval(inTimerID);
         inTimerID = undefined;
         timerEffects(DISABLE, 'on');
         handleAudio();
@@ -171,9 +192,10 @@ const handleTimer = () => {
         setTimeout(timerRunning, 200);
         inTimerID = setInterval(timerRunning, 1000);
         timerEffects(HIDE, 'on');
+        timerStatus.status = Status.InProgress;
     }
     else {
-        timer.stop(inTimerID);
+        clearInterval(inTimerID);
         inTimerID = undefined;
         timerEffects(HIDE, 'off');
     }
@@ -195,6 +217,7 @@ const resetTimer = () => {
     inTimerID = undefined;
     clearTimeout(outTimerID);
     outTimerID = undefined;
+    timerStatus.status = Status.NotStarted;
     handleAudio(true);
     timerEffects(HIDE, 'off', 'reset');
     minutes = DefaultTimes.Session;
