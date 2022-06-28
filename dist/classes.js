@@ -1,4 +1,4 @@
-import { sessionLength, sessionTime, SESSION, breakLength, breakTime, BREAK, timerLabel, timeLeft, timerRunning, minutes } from './app.js';
+import { sessionLength, sessionTime, SESSION, breakLength, breakTime, BREAK, timerLabel, timeLeft, timerRunning } from './app.js';
 export class TimeLength {
     constructor(length) {
         this.length = length;
@@ -10,8 +10,8 @@ export class TimeLength {
         return this.length <= 1 ? this.length = 1 : this.length -= 1;
     }
     render(label) {
-        return label === 'session' ? sessionLength.innerHTML = `${this.length}` :
-            breakLength.innerHTML = `${this.length}`;
+        return label === 'session' ? sessionLength.textContent = `${this.length}` :
+            breakLength.textContent = `${this.length}`;
     }
     getLength() {
         return this.length;
@@ -34,11 +34,11 @@ export class Timer {
         }
         return this.duration.getLength();
     }
-    render(minutes, label) {
+    render(label) {
         if (label) {
             timerLabel.textContent = `${this.type[0].toUpperCase()}${this.type.slice(1)}`;
         }
-        return minutes < 10 ? timeLeft.textContent = `0${this.duration.getLength()}:00` :
+        return this.duration.getLength() < 10 ? timeLeft.textContent = `0${this.duration.getLength()}:00` :
             timeLeft.textContent = `${this.duration.getLength()}:00`;
     }
     renderTimerOn(minutes, seconds) {
@@ -60,7 +60,7 @@ export class Timer {
             this.type = SESSION;
         }
         this.setTimer();
-        this.render(minutes, true);
+        this.render(true);
         return setInterval(timerRunning, 1000);
     }
 }
