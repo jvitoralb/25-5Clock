@@ -1,8 +1,8 @@
-import { TimeLength } from './classes.js'
+import { TimeLength, Timer } from './classes.js'
 
-export const sessionLength = document.querySelector('#session-length')!
-export const breakLength = document.querySelector('#break-length')!
 const sessionBreak = document.querySelectorAll('.session-break')
+const sessionLength = document.querySelector('#session-length')!
+const breakLength = document.querySelector('#break-length')!
 const timerLabel = document.querySelector('#timer-label')!
 const startStop = document.querySelector('#start_stop') as HTMLButtonElement
 const timeLeft = document.querySelector('#time-left')!
@@ -29,22 +29,20 @@ const SESSION: TimerType = 'session'
 const BREAK: TimerType = 'break'
 const DISABLE: Effects = 'disable'
 const HIDE: Effects = 'hide'
+let inTimerID: SetTimeID = undefined
+let outTimerID: SetTimeID = undefined
 let sessionTime: TimeLength
 let breakTime: TimeLength
 let timer: Timer
-
 let minutes: number
 let seconds: number = 0
-let inTimerID: SetTimeID = undefined
-let outTimerID: SetTimeID = undefined
 
-// Dont like this name 
 interface BreakSessionInter {
     session: Function
     break: Function
 }
-// Also dont like this one
-const functions: BreakSessionInter = {
+
+const ctrlBreakSession: BreakSessionInter = {
     session: (type: string, time: TimeLength): number => {
         if (type.includes('increment')) {
             return time.increment()
@@ -69,34 +67,37 @@ const timerStatus: TimerStatusInter = {
     status: Status.NotStarted
 }
 
-const handleChanges = (option: string): void => {
+const handleTimerLength = (option: string): void => {
     /**
      * If timer is running then is paused, you can change session and/or break length, which is not ideal
      * Deal with it, block it
     **/
 
     if (option.includes(SESSION)) {
-        functions[SESSION](option, sessionTime)
+        ctrlBreakSession[SESSION](option, sessionTime)
         sessionTime.render(SESSION)
     } else if (option.includes(BREAK)) {
-        functions[BREAK](option, breakTime)
+        ctrlBreakSession[BREAK](option, breakTime)
         breakTime.render(BREAK)
     }
-    timer.render()
+    timer.render(minutes)
+    minutes = timer.setTimer()
+}
+
+const handleChanges = (option: string): void => {
+    if (timerStatus.status === 1) {
+        seconds = 0
+    }
+    /**
+     * Set a warning(tooltips or something) so the user knows it's gonna restart the timer
+     * with the new time provided and call handlechanges
+    **/
+    handleTimerLength(option)
 }
 
 sessionBreak.forEach(button => button.addEventListener('click', (): void => {
-    // make this a normal function
         let option: string = button.id
-        if (timerStatus.status === 0) {
-            handleChanges(option)
-        } else {
-            /**
-             * Set a warning(tooltips or something) so the user knows it's gonna restart the timer
-             * with the new time provided and call handlechanges
-            **/
-           console.log('worked')
-        }
+        handleChanges(option)
     })
 )
 
@@ -119,70 +120,6 @@ const btnEffects: TimerEffectsInter = {
             }
             return btn.classList.remove('visibilityClass')
         })
-    }
-}
-
-class Timer {
-    type: TimerType
-    duration: TimeLength
-
-    constructor(type: TimerType, dur: TimeLength) {
-        this.type = type
-        this.duration = dur
-    }
-
-    getType(): TimerType {
-        return this.type
-    }
-
-    setTimer(): number {
-        if (this.type === SESSION) {
-            this.duration = sessionTime
-        } else  {
-            this.duration = breakTime
-        }
-        return minutes = this.duration.getLength()
-    }
-
-    render(label?: boolean): string {
-        this.setTimer()
-        if (label) {
-            timerLabel.textContent = `${this.type[0].toUpperCase()}${this.type.slice(1)}`
-        }
-        /**
-         * Think in a way of this class to have access to minutes so it can render properly
-        **/
-        return minutes < 10 ? timeLeft.textContent = `0${this.duration.getLength()}:00` :
-        timeLeft.textContent = `${this.duration.getLength()}:00`
-    }
-
-    renderTimerOn(minutes: number, seconds: number): string {
-        /**
-         * Change this parameters and variables names
-        **/
-        let min: NumOrStr = minutes
-        let sec: NumOrStr = seconds
-        if (seconds < 10) {
-            sec = `0${seconds}`
-        }
-        if (minutes < 10) {
-            min = `0${minutes}`
-        }
-        return timeLeft.textContent = `${min}:${sec}`
-    }
-    /**
-     * Stop method removed
-    **/
-    switch(): number {
-        if (this.type === SESSION) {
-            this.type = BREAK
-        } else {
-            this.type = SESSION
-        }
-        this.render(true)
-        outTimerID = undefined
-        btnEffects[DISABLE]('off')
-        return inTimerID = setInterval(timerRunning, 1000)
     }
 }
 
@@ -220,7 +157,13 @@ const timerRunning = (): void => {
         inTimerID = undefined
         timerEffects(DISABLE, 'on')
         handleAudio()
-        outTimerID = setTimeout(() => timer.switch(), 2*1000)
+        outTimerID = setTimeout(() => {
+            inTimerID = timer.switch()
+            outTimerID = undefined
+            minutes = timer.setTimer()
+            btnEffects[DISABLE]('off')
+            console.log(minutes, seconds, timer.setTimer())
+        }, 2*1000)
         // promise + timer.switch may help to change this class to another file
     }
     timer.renderTimerOn(minutes, seconds)
@@ -248,7 +191,8 @@ const loadValues = (): void => {
     timer = new Timer(SESSION, sessionTime)
     sessionTime.render(SESSION)
     breakTime.render(BREAK)
-    timer.render(true)
+    minutes = DefaultTimes.Session
+    timer.render(minutes, true)
 }
 
 window.addEventListener('load', loadValues)
@@ -263,9 +207,13 @@ const resetTimer = (): void => {
     timerStatus.status = Status.NotStarted
     handleAudio(true)
     timerEffects(HIDE, 'off', 'reset')
-    minutes = DefaultTimes.Session
     seconds = 0
 }
 
 reset.addEventListener('click', resetTimer)
 
+export {
+    sessionLength, sessionTime, SESSION,
+    breakLength, breakTime, BREAK, timerLabel,
+    timeLeft, TimerType, NumOrStr, timerRunning, minutes
+}

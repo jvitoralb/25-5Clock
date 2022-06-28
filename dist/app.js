@@ -1,7 +1,7 @@
-import { TimeLength } from './classes.js';
-export const sessionLength = document.querySelector('#session-length');
-export const breakLength = document.querySelector('#break-length');
+import { TimeLength, Timer } from './classes.js';
 const sessionBreak = document.querySelectorAll('.session-break');
+const sessionLength = document.querySelector('#session-length');
+const breakLength = document.querySelector('#break-length');
 const timerLabel = document.querySelector('#timer-label');
 const startStop = document.querySelector('#start_stop');
 const timeLeft = document.querySelector('#time-left');
@@ -21,15 +21,14 @@ const SESSION = 'session';
 const BREAK = 'break';
 const DISABLE = 'disable';
 const HIDE = 'hide';
+let inTimerID = undefined;
+let outTimerID = undefined;
 let sessionTime;
 let breakTime;
 let timer;
 let minutes;
 let seconds = 0;
-let inTimerID = undefined;
-let outTimerID = undefined;
-// Also dont like this one
-const functions = {
+const ctrlBreakSession = {
     session: (type, time) => {
         if (type.includes('increment')) {
             return time.increment();
@@ -47,34 +46,35 @@ const timerStatus = {
     timerType: () => timer.getType(),
     status: Status.NotStarted
 };
-const handleChanges = (option) => {
+const handleTimerLength = (option) => {
     /**
      * If timer is running then is paused, you can change session and/or break length, which is not ideal
      * Deal with it, block it
     **/
     if (option.includes(SESSION)) {
-        functions[SESSION](option, sessionTime);
+        ctrlBreakSession[SESSION](option, sessionTime);
         sessionTime.render(SESSION);
     }
     else if (option.includes(BREAK)) {
-        functions[BREAK](option, breakTime);
+        ctrlBreakSession[BREAK](option, breakTime);
         breakTime.render(BREAK);
     }
-    timer.render();
+    timer.render(minutes);
+    minutes = timer.setTimer();
+};
+const handleChanges = (option) => {
+    if (timerStatus.status === 1) {
+        seconds = 0;
+    }
+    /**
+     * Set a warning(tooltips or something) so the user knows it's gonna restart the timer
+     * with the new time provided and call handlechanges
+    **/
+    handleTimerLength(option);
 };
 sessionBreak.forEach(button => button.addEventListener('click', () => {
-    // make this a normal function
     let option = button.id;
-    if (timerStatus.status === 0) {
-        handleChanges(option);
-    }
-    else {
-        /**
-         * Set a warning(tooltips or something) so the user knows it's gonna restart the timer
-         * with the new time provided and call handlechanges
-        **/
-        console.log('worked');
-    }
+    handleChanges(option);
 }));
 const btnEffects = {
     disable: (status) => {
@@ -92,64 +92,6 @@ const btnEffects = {
         });
     }
 };
-class Timer {
-    constructor(type, dur) {
-        this.type = type;
-        this.duration = dur;
-    }
-    getType() {
-        return this.type;
-    }
-    setTimer() {
-        if (this.type === SESSION) {
-            this.duration = sessionTime;
-        }
-        else {
-            this.duration = breakTime;
-        }
-        return minutes = this.duration.getLength();
-    }
-    render(label) {
-        this.setTimer();
-        if (label) {
-            timerLabel.textContent = `${this.type[0].toUpperCase()}${this.type.slice(1)}`;
-        }
-        /**
-         * Think in a way of this class to have access to minutes so it can render properly
-        **/
-        return minutes < 10 ? timeLeft.textContent = `0${this.duration.getLength()}:00` :
-            timeLeft.textContent = `${this.duration.getLength()}:00`;
-    }
-    renderTimerOn(minutes, seconds) {
-        /**
-         * Change this parameters and variables names
-        **/
-        let min = minutes;
-        let sec = seconds;
-        if (seconds < 10) {
-            sec = `0${seconds}`;
-        }
-        if (minutes < 10) {
-            min = `0${minutes}`;
-        }
-        return timeLeft.textContent = `${min}:${sec}`;
-    }
-    /**
-     * Stop method removed
-    **/
-    switch() {
-        if (this.type === SESSION) {
-            this.type = BREAK;
-        }
-        else {
-            this.type = SESSION;
-        }
-        this.render(true);
-        outTimerID = undefined;
-        btnEffects[DISABLE]('off');
-        return inTimerID = setInterval(timerRunning, 1000);
-    }
-}
 const handleAudio = (stop) => {
     if (stop) {
         warningAudio.pause();
@@ -182,7 +124,13 @@ const timerRunning = () => {
         inTimerID = undefined;
         timerEffects(DISABLE, 'on');
         handleAudio();
-        outTimerID = setTimeout(() => timer.switch(), 2 * 1000);
+        outTimerID = setTimeout(() => {
+            inTimerID = timer.switch();
+            outTimerID = undefined;
+            minutes = timer.setTimer();
+            btnEffects[DISABLE]('off');
+            console.log(minutes, seconds, timer.setTimer());
+        }, 2 * 1000);
         // promise + timer.switch may help to change this class to another file
     }
     timer.renderTimerOn(minutes, seconds);
@@ -207,7 +155,8 @@ const loadValues = () => {
     timer = new Timer(SESSION, sessionTime);
     sessionTime.render(SESSION);
     breakTime.render(BREAK);
-    timer.render(true);
+    minutes = DefaultTimes.Session;
+    timer.render(minutes, true);
 };
 window.addEventListener('load', loadValues);
 const resetTimer = () => {
@@ -220,7 +169,7 @@ const resetTimer = () => {
     timerStatus.status = Status.NotStarted;
     handleAudio(true);
     timerEffects(HIDE, 'off', 'reset');
-    minutes = DefaultTimes.Session;
     seconds = 0;
 };
 reset.addEventListener('click', resetTimer);
+export { sessionLength, sessionTime, SESSION, breakLength, breakTime, BREAK, timerLabel, timeLeft, timerRunning, minutes };
