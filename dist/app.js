@@ -29,17 +29,25 @@ let timer;
 let minutes;
 let seconds = 0;
 const ctrlBreakSession = {
-    session: (type, time) => {
+    session: (type) => {
+        console.log('session obj');
         if (type.includes('increment')) {
-            return time.increment();
+            sessionTime.increment();
         }
-        return time.decrement();
+        else {
+            sessionTime.decrement();
+        }
+        return sessionTime.render(SESSION);
     },
-    break: (type, time) => {
+    break: (type) => {
+        console.log('break obj');
         if (type.includes('increment')) {
-            return time.increment();
+            breakTime.increment();
         }
-        return time.decrement();
+        else {
+            breakTime.decrement();
+        }
+        return breakTime.render(BREAK);
     }
 };
 const timerStatus = {
@@ -47,29 +55,23 @@ const timerStatus = {
     status: Status.NotStarted
 };
 const handleTimerLength = (option) => {
-    /**
-     * If timer is running then is paused, you can change session and/or break length, which is not ideal
-     * Deal with it, block it
-    **/
-    if (option.includes(SESSION)) {
-        ctrlBreakSession[SESSION](option, sessionTime);
-        sessionTime.render(SESSION);
+    let sessionType = SESSION;
+    if (option.includes(BREAK)) {
+        sessionType = BREAK;
     }
-    else if (option.includes(BREAK)) {
-        ctrlBreakSession[BREAK](option, breakTime);
-        breakTime.render(BREAK);
-    }
+    ctrlBreakSession[sessionType](option);
     minutes = timer.setTimer();
     timer.render();
 };
 const handleChanges = (option) => {
     if (timerStatus.status === 1) {
+        if (option.includes(BREAK)) {
+            return ctrlBreakSession[BREAK](option);
+        }
         seconds = 0;
     }
     /**
      * Set a warning(tooltips or something) so the user knows it's gonna restart the timer
-     * with the new time provided and call handleTimerLength
-     * If timer is running then is paused and change break length the current:session time is re-rendered
     **/
     handleTimerLength(option);
 };
@@ -114,7 +116,7 @@ const timerEffects = (effect, sousEffect, src) => {
     return btnEffects[effect](sousEffect);
 };
 const timerRunning = () => {
-    console.log(`timer ${timer.getType()} ticking`, minutes, seconds);
+    console.log(`timer ${timerStatus.timerType()} ticking`, minutes, seconds);
     if (seconds === 0 && minutes >= 1) {
         minutes--;
         seconds = 60;

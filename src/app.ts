@@ -43,17 +43,23 @@ interface BreakSessionInter {
 }
 
 const ctrlBreakSession: BreakSessionInter = {
-    session: (type: string, time: TimeLength): number => {
+    session: (type: string): string => {
+        console.log('session obj')
         if (type.includes('increment')) {
-            return time.increment()
+            sessionTime.increment()
+        } else {
+            sessionTime.decrement()
         }
-        return time.decrement()
+        return sessionTime.render(SESSION)
     },
-    break: (type: string, time: TimeLength): number => {
+    break: (type: string): string => {
+        console.log('break obj')
         if (type.includes('increment')) {
-            return time.increment()
+            breakTime.increment()
+        } else {
+            breakTime.decrement()
         }
-        return time.decrement()
+        return breakTime.render(BREAK)
     }
 }
 
@@ -68,30 +74,25 @@ const timerStatus: TimerStatusInter = {
 }
 
 const handleTimerLength = (option: string): void => {
-    /**
-     * If timer is running then is paused, you can change session and/or break length, which is not ideal
-     * Deal with it, block it
-    **/
+    let sessionType: TimerType = SESSION
 
-    if (option.includes(SESSION)) {
-        ctrlBreakSession[SESSION](option, sessionTime)
-        sessionTime.render(SESSION)
-    } else if (option.includes(BREAK)) {
-        ctrlBreakSession[BREAK](option, breakTime)
-        breakTime.render(BREAK)
+    if (option.includes(BREAK)) {
+        sessionType = BREAK
     }
+    ctrlBreakSession[sessionType](option)
     minutes = timer.setTimer()
     timer.render()
 }
 
 const handleChanges = (option: string): void => {
     if (timerStatus.status === 1) {
+        if(option.includes(BREAK)) {
+            return ctrlBreakSession[BREAK](option)
+        }
         seconds = 0
     }
     /**
      * Set a warning(tooltips or something) so the user knows it's gonna restart the timer
-     * with the new time provided and call handleTimerLength
-     * If timer is running then is paused and change break length the current:session time is re-rendered
     **/
     handleTimerLength(option)
 }
@@ -147,7 +148,7 @@ const timerEffects = (effect: Effects, sousEffect?: OnOff, src?: string): Functi
 }
 
 const timerRunning = (): void => {
-    console.log(`timer ${timer.getType()} ticking`, minutes, seconds)
+    console.log(`timer ${timerStatus.timerType()} ticking`, minutes, seconds)
     if (seconds === 0 && minutes >= 1) {
         minutes--
         seconds = 60
