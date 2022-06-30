@@ -69,6 +69,7 @@ interface TimerStatusInter {
 }
 
 const timerStatus: TimerStatusInter = {
+    // Not sure if i need this object
     timerType: (): TimerType => timer.getType(),
     status: Status.NotStarted
 }
@@ -80,7 +81,7 @@ const handleTimerLength = (option: string): void => {
         sessionType = BREAK
     }
     ctrlBreakSession[sessionType](option)
-    minutes = timer.setTimer()
+    minutes = timer.getDuration()
     timer.render()
 }
 
@@ -135,7 +136,7 @@ const handleAudio = (stop?: boolean): void => {
     }
 }
 
-const timerEffects = (effect: Effects, sousEffect?: OnOff, src?: string): Function => {
+const timerEffects = (effect: Effects, sousEffect: OnOff, src?: string): Function => {
     if (src === 'reset') {
         return ((call: Effects) => {
             sessionBreak.forEach(btn => {
@@ -148,7 +149,7 @@ const timerEffects = (effect: Effects, sousEffect?: OnOff, src?: string): Functi
 }
 
 const timerRunning = (): void => {
-    console.log(`timer ${timerStatus.timerType()} ticking`, minutes, seconds)
+    console.log(`timer ${timerStatus.timerType()} ticking`, minutes, seconds, breakTime.getLength())
     if (seconds === 0 && minutes >= 1) {
         minutes--
         seconds = 60
@@ -163,11 +164,10 @@ const timerRunning = (): void => {
         /**
          * This is not looking cool, perhaps switch this to a promise
         **/
-            inTimerID = timer.switch()
+            inTimerID = timer.switchType()
             outTimerID = undefined
-            minutes = timer.setTimer()
+            minutes = timer.getDuration()
             btnEffects[DISABLE]('off')
-            console.log(minutes, seconds, timer.setTimer())
         }, 2*1000)
     }
     timer.renderTimerOn(minutes, seconds)
@@ -193,10 +193,11 @@ const loadValues = (): void => {
     sessionTime = new TimeLength(DefaultTimes.Session)
     breakTime = new TimeLength(DefaultTimes.Break)
     timer = new Timer(SESSION, sessionTime)
-    minutes = timer.setTimer()
+    minutes = timer.getDuration()
     sessionTime.render(SESSION)
     breakTime.render(BREAK)
-    timer.render(true)
+    timer.renderLabel()
+    timer.render()
 }
 
 window.addEventListener('load', loadValues)
@@ -216,9 +217,13 @@ const resetTimer = (): void => {
 
 reset.addEventListener('click', resetTimer)
 
+/**
+ * Some exports I don't use here
+**/
+
 export {
     sessionLength, sessionTime, SESSION,
     breakLength, breakTime, BREAK, timerLabel,
-    timeLeft, TimerType, NumOrStr, timerRunning
+    timeLeft, TimerType, NumOrStr, timerRunning, timer
 }
 

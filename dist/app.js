@@ -51,6 +51,7 @@ const ctrlBreakSession = {
     }
 };
 const timerStatus = {
+    // Not sure if i need this object
     timerType: () => timer.getType(),
     status: Status.NotStarted
 };
@@ -60,7 +61,7 @@ const handleTimerLength = (option) => {
         sessionType = BREAK;
     }
     ctrlBreakSession[sessionType](option);
-    minutes = timer.setTimer();
+    minutes = timer.getDuration();
     timer.render();
 };
 const handleChanges = (option) => {
@@ -116,7 +117,7 @@ const timerEffects = (effect, sousEffect, src) => {
     return btnEffects[effect](sousEffect);
 };
 const timerRunning = () => {
-    console.log(`timer ${timerStatus.timerType()} ticking`, minutes, seconds);
+    console.log(`timer ${timerStatus.timerType()} ticking`, minutes, seconds, breakTime.getLength());
     if (seconds === 0 && minutes >= 1) {
         minutes--;
         seconds = 60;
@@ -131,11 +132,10 @@ const timerRunning = () => {
             /**
              * This is not looking cool, perhaps switch this to a promise
             **/
-            inTimerID = timer.switch();
+            inTimerID = timer.switchType();
             outTimerID = undefined;
-            minutes = timer.setTimer();
+            minutes = timer.getDuration();
             btnEffects[DISABLE]('off');
-            console.log(minutes, seconds, timer.setTimer());
         }, 2 * 1000);
     }
     timer.renderTimerOn(minutes, seconds);
@@ -158,10 +158,11 @@ const loadValues = () => {
     sessionTime = new TimeLength(DefaultTimes.Session);
     breakTime = new TimeLength(DefaultTimes.Break);
     timer = new Timer(SESSION, sessionTime);
-    minutes = timer.setTimer();
+    minutes = timer.getDuration();
     sessionTime.render(SESSION);
     breakTime.render(BREAK);
-    timer.render(true);
+    timer.renderLabel();
+    timer.render();
 };
 window.addEventListener('load', loadValues);
 const resetTimer = () => {
@@ -177,4 +178,7 @@ const resetTimer = () => {
     timerStatus.status = Status.NotStarted;
 };
 reset.addEventListener('click', resetTimer);
-export { sessionLength, sessionTime, SESSION, breakLength, breakTime, BREAK, timerLabel, timeLeft, timerRunning };
+/**
+ * Some exports I don't use here
+**/
+export { sessionLength, sessionTime, SESSION, breakLength, breakTime, BREAK, timerLabel, timeLeft, timerRunning, timer };
