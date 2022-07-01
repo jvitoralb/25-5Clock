@@ -1,43 +1,19 @@
 import {
-    sessionLength, sessionTime, SESSION,
-    breakLength, breakTime, BREAK, timerLabel,
-    timeLeft, TimerType, NumOrStr, timerRunning, timer
+    SESSION, sessionLength, sessionTime,
+    BREAK, breakLength, breakTime,
+    timer, timerLabel, timeLeft,
+    NumOrStr, TimerType, timerRunning
 } from './app.js'
 
-class Render {
-    public renderLabel(): string {
-        return timerLabel.textContent = `${timer.getType()[0].toUpperCase()}${timer.getType().slice(1)}`
-    }
-
-    private timer(): string {
-        return timer.getDuration() < 10 ? timeLeft.textContent = `0${timer.getDuration()}:00` :
-        timeLeft.textContent = `${timer.getDuration()}:00`
-    }
-
-    private session(): string {
-        return sessionLength.textContent = `${sessionTime.getLength()}`
-    }
-
-    private break(): string {
-        return breakLength.textContent = `${breakTime.getLength()}`
-    }
-
-    public render(sessionType?: TimerType): string {
-        if (sessionType === BREAK) {
-            return this.break()
-        } else if (sessionType === SESSION) {
-            return this.session()
-        }
-        return this.timer()
-    }
-}
-
-export class TimeLength extends Render {
+export class TimeLength {
     private length: number
 
     constructor(length: number) {
-        super() // study more about this super thing
         this.length = length
+    }
+
+    getLength(): number {
+        return this.length
     }
 
     increment(): number {
@@ -47,18 +23,13 @@ export class TimeLength extends Render {
     decrement(): number {
         return this.length <= 1 ? this.length = 1 : this.length -= 1
     }
-
-    getLength(): number {
-        return this.length
-    }
 }
 
-export class Timer extends Render {
+export class Timer {
     private type: TimerType
     private duration: TimeLength
 
     constructor(type: TimerType, dur: TimeLength) {
-        super() // study more about this super thing
         this.type = type
         this.duration = dur
     }
@@ -71,21 +42,47 @@ export class Timer extends Render {
         return this.duration.getLength()
     }
 
-    setTimer(): TimeLength {
-        /**
-         * Don't think I need this here
-         * You can just put this in switchType method
-        **/
+    switchType(): number {
         if (this.type === SESSION) {
-            return this.duration = sessionTime
+            this.type = BREAK
+            this.duration = breakTime
+        } else {
+            this.type = SESSION
+            this.duration = sessionTime
         }
-        return this.duration = breakTime
+        Render.timerLabel()
+        Render.timer()
+        return setInterval(timerRunning, 1000)
+    }
+}
+
+export class Render {
+
+    static session(): string {
+        return sessionLength.textContent = `${sessionTime.getLength()}`
     }
 
-    renderTimerOn(minutes: number, seconds: number): string {
-        /**
-         * Work on tranfer this method to Render Class
-        **/
+    static break(): string {
+        return breakLength.textContent = `${breakTime.getLength()}`
+    }
+
+    static timerLabel(): string {
+        return timerLabel.textContent = `${timer.getType()[0].toUpperCase()}${timer.getType().slice(1)}`
+    }
+
+    static timer(): string {
+        return timer.getDuration() < 10 ? timeLeft.textContent = `0${timer.getDuration()}:00` :
+        timeLeft.textContent = `${timer.getDuration()}:00`
+    }
+
+    static onLoad() {
+        this.timer()
+        this.break()
+        this.session()
+        this.timerLabel()
+    }
+
+    static timerOn(minutes: number, seconds: number): string {
         let min: NumOrStr = minutes
         let sec: NumOrStr = seconds
         if (seconds < 10) {
@@ -95,18 +92,6 @@ export class Timer extends Render {
             min = `0${minutes}`
         }
         return timeLeft.textContent = `${min}:${sec}`
-    }
-
-    switchType(): number {
-        if (this.type === SESSION) {
-            this.type = BREAK
-        } else {
-            this.type = SESSION
-        }
-        this.renderLabel()
-        this.setTimer()
-        this.render()
-        return setInterval(timerRunning, 1000)
     }
 }
 
