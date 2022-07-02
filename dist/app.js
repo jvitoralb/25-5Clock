@@ -1,4 +1,5 @@
 import { TimeLength, Timer, Render } from './classes.js';
+import { DefaultTimes, Status } from './types.js';
 const sessionBreak = document.querySelectorAll('.session-break');
 const sessionLength = document.querySelector('#session-length');
 const breakLength = document.querySelector('#break-length');
@@ -18,16 +19,6 @@ let breakTime;
 let timer;
 let minutes;
 let seconds = 0;
-var DefaultTimes;
-(function (DefaultTimes) {
-    DefaultTimes[DefaultTimes["Session"] = 25] = "Session";
-    DefaultTimes[DefaultTimes["Break"] = 5] = "Break";
-})(DefaultTimes || (DefaultTimes = {}));
-var Status;
-(function (Status) {
-    Status[Status["NotStarted"] = 0] = "NotStarted";
-    Status[Status["InProgress"] = 1] = "InProgress";
-})(Status || (Status = {}));
 const ctrlBreakSession = {
     session: (type) => {
         if (type.includes('increment')) {
@@ -49,9 +40,9 @@ const ctrlBreakSession = {
     }
 };
 const timerStatus = {
-    timerDuration: () => timer.getDuration(),
+    status: Status.NotStarted,
     timerType: () => timer.getType(),
-    status: Status.NotStarted
+    timerDuration: () => timer.getDuration()
 };
 const changeTimerLength = (option) => {
     let sessionType = SESSION;
@@ -60,7 +51,7 @@ const changeTimerLength = (option) => {
     }
     ctrlBreakSession[sessionType](option);
     minutes = timerStatus.timerDuration();
-    Render.timer();
+    return Render.timer();
 };
 const handleChanges = (option) => {
     if (timerStatus.status === 1) {
@@ -78,62 +69,63 @@ sessionBreak.forEach(button => button.addEventListener('click', () => {
     let option = button.id;
     handleChanges(option);
 }));
-const btnEffects = {
-    disable: (status) => {
-        if (status === 'on') {
-            return startStop.disabled = true;
-        }
-        return startStop.disabled = false;
-    },
-    hide: (status) => {
-        sessionBreak.forEach(btn => {
-            // Check this loop cycles, if is running unecessary
-            if (status === 'on') {
-                return btn.classList.add('visibilityClass');
-            }
-            return btn.classList.remove('visibilityClass');
-        });
-    }
-};
-const handleAudio = (stop) => {
+const audioHandler = (stop) => {
     if (stop) {
         warningAudio.pause();
-        warningAudio.currentTime = 0;
+        return warningAudio.currentTime = 0;
     }
-    else {
-        warningAudio.play();
-    }
+    return warningAudio.play();
 };
 const timerEffects = (effect, sousEffect, src) => {
+    const btnEffects = {
+        disable: (status) => {
+            if (status === 'on') {
+                return startStop.disabled = true;
+            }
+            return startStop.disabled = false;
+        },
+        hide: (status) => {
+            return sessionBreak.forEach(btn => {
+                if (status === 'on') {
+                    return btn.classList.add('visibilityClass');
+                }
+                return btn.classList.remove('visibilityClass');
+            });
+        }
+    };
     if (src === 'reset') {
-        btnEffects[HIDE]();
-        return btnEffects[DISABLE]();
+        btnEffects[DISABLE]('off');
     }
     return btnEffects[effect](sousEffect);
 };
+const clearTimeIDs = (timeID) => {
+    if (timeID === 'inTimerID') {
+        clearInterval(inTimerID);
+        return inTimerID = undefined;
+    }
+    clearTimeout(outTimerID);
+    return outTimerID = undefined;
+};
 const timerRunning = () => {
-    // I don't like the way this function is
+    const switchSessions = () => {
+        timer.switchType();
+        minutes = timerStatus.timerDuration();
+        inTimerID = setInterval(timerRunning, 1000);
+        timerEffects(DISABLE, 'off');
+        return clearTimeIDs('outTimerID');
+    };
     if (seconds === 0 && minutes >= 1) {
         minutes--;
         seconds = 60;
     }
     seconds--;
     if (seconds === 0 && minutes === 0) {
-        clearInterval(inTimerID);
-        inTimerID = undefined;
+        audioHandler(false);
+        clearTimeIDs('inTimerID');
         timerEffects(DISABLE, 'on');
-        handleAudio();
-        outTimerID = setTimeout(() => {
-            /**
-             * This is not looking cool, perhaps switch this to a promise
-            **/
-            inTimerID = timer.switchType();
-            outTimerID = undefined;
-            minutes = timerStatus.timerDuration();
-            btnEffects[DISABLE]('off');
-        }, 2 * 1000);
+        outTimerID = setTimeout(switchSessions, 2 * 1000);
     }
-    Render.timerOn(minutes, seconds);
+    return Render.timerOn(minutes, seconds);
 };
 const handleTimer = () => {
     if (!inTimerID && !outTimerID) {
@@ -143,8 +135,7 @@ const handleTimer = () => {
         timerStatus.status = Status.InProgress;
     }
     else {
-        clearInterval(inTimerID);
-        inTimerID = undefined;
+        clearTimeIDs('inTimerID');
         timerEffects(HIDE, 'off');
     }
 };
@@ -154,20 +145,17 @@ const loadValues = () => {
     breakTime = new TimeLength(DefaultTimes.Break);
     timer = new Timer(SESSION, sessionTime);
     minutes = timerStatus.timerDuration();
-    Render.onLoad();
+    return Render.onLoad();
 };
 window.addEventListener('load', loadValues);
 const resetTimer = () => {
-    // Also don't like this function
-    clearInterval(inTimerID);
-    inTimerID = undefined;
-    clearTimeout(outTimerID);
-    outTimerID = undefined;
+    clearTimeIDs('inTimerID');
+    clearTimeIDs('outTimerID');
     seconds = 0;
     loadValues();
-    handleAudio(true);
+    audioHandler(true);
     timerEffects(HIDE, 'off', 'reset');
     timerStatus.status = Status.NotStarted;
 };
 reset.addEventListener('click', resetTimer);
-export { SESSION, sessionLength, sessionTime, BREAK, breakLength, breakTime, timer, timerLabel, timeLeft, timerRunning };
+export { BREAK, breakLength, breakTime, SESSION, sessionLength, sessionTime, timerStatus, timerLabel, timeLeft };

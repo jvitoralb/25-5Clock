@@ -1,8 +1,8 @@
+import { TimerType, NumOrStr } from './types.js'
 import {
-    SESSION, sessionLength, sessionTime,
     BREAK, breakLength, breakTime,
-    timer, timerLabel, timeLeft,
-    NumOrStr, TimerType, timerRunning
+    SESSION, sessionLength, sessionTime,
+    timerStatus, timerLabel, timeLeft
 } from './app.js'
 
 export class TimeLength {
@@ -25,6 +25,45 @@ export class TimeLength {
     }
 }
 
+export class Render {
+
+    static session(): string {
+        return sessionLength.textContent = `${sessionTime.getLength()}`
+    }
+
+    static break(): string {
+        return breakLength.textContent = `${breakTime.getLength()}`
+    }
+
+    static timerLabel(): string {
+        return timerLabel.textContent = `${timerStatus.timerType()[0].toUpperCase()}${timerStatus.timerType().slice(1)}`
+    }
+
+    static timer(): string {
+        return timerStatus.timerDuration() < 10 ? timeLeft.textContent = `0${timerStatus.timerDuration()}:00` :
+        timeLeft.textContent = `${timerStatus.timerDuration()}:00`
+    }
+
+    static onLoad(): string {
+        this.timer()
+        this.break()
+        this.session()
+        return this.timerLabel()
+    }
+
+    static timerOn(minutes: number, seconds: number): string {
+        let min: NumOrStr = minutes
+        let sec: NumOrStr = seconds
+        if (seconds < 10) {
+            sec = `0${seconds}`
+        }
+        if (minutes < 10) {
+            min = `0${minutes}`
+        }
+        return timeLeft.textContent = `${min}:${sec}`
+    }
+}
+
 export class Timer {
     private type: TimerType
     private duration: TimeLength
@@ -42,7 +81,7 @@ export class Timer {
         return this.duration.getLength()
     }
 
-    switchType(): number {
+    switchType(): Render {
         if (this.type === SESSION) {
             this.type = BREAK
             this.duration = breakTime
@@ -51,47 +90,7 @@ export class Timer {
             this.duration = sessionTime
         }
         Render.timerLabel()
-        Render.timer()
-        return setInterval(timerRunning, 1000)
-    }
-}
-
-export class Render {
-
-    static session(): string {
-        return sessionLength.textContent = `${sessionTime.getLength()}`
-    }
-
-    static break(): string {
-        return breakLength.textContent = `${breakTime.getLength()}`
-    }
-
-    static timerLabel(): string {
-        return timerLabel.textContent = `${timer.getType()[0].toUpperCase()}${timer.getType().slice(1)}`
-    }
-
-    static timer(): string {
-        return timer.getDuration() < 10 ? timeLeft.textContent = `0${timer.getDuration()}:00` :
-        timeLeft.textContent = `${timer.getDuration()}:00`
-    }
-
-    static onLoad() {
-        this.timer()
-        this.break()
-        this.session()
-        this.timerLabel()
-    }
-
-    static timerOn(minutes: number, seconds: number): string {
-        let min: NumOrStr = minutes
-        let sec: NumOrStr = seconds
-        if (seconds < 10) {
-            sec = `0${seconds}`
-        }
-        if (minutes < 10) {
-            min = `0${minutes}`
-        }
-        return timeLeft.textContent = `${min}:${sec}`
+        return Render.timer()
     }
 }
 
