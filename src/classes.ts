@@ -2,7 +2,7 @@ import { TimerType, NumOrStr } from './types.js'
 import {
     BREAK, breakLength, breakTime,
     SESSION, sessionLength, sessionTime,
-    timerStatus, timerLabel, timeLeft
+    clockStatus, timerLabel, timeLeft
 } from './app.js'
 
 export class TimeLength {
@@ -36,15 +36,15 @@ export class Render {
     }
 
     static timerLabel(): string {
-        return timerLabel.textContent = `${timerStatus.timerType()[0].toUpperCase()}${timerStatus.timerType().slice(1)}`
+        return timerLabel.textContent = `${clockStatus.timerType()[0].toUpperCase()}${clockStatus.timerType().slice(1)}`
     }
 
     static timer(): string {
-        return timerStatus.timerDuration() < 10 ? timeLeft.textContent = `0${timerStatus.timerDuration()}:00` :
-        timeLeft.textContent = `${timerStatus.timerDuration()}:00`
+        return clockStatus.timerDuration() < 10 ? timeLeft.textContent = `0${clockStatus.timerDuration()}:00` :
+        timeLeft.textContent = `${clockStatus.timerDuration()}:00`
     }
 
-    static onLoad(): string {
+    static allValues(): string {
         this.timer()
         this.break()
         this.session()

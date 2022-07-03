@@ -1,4 +1,4 @@
-import { BREAK, breakLength, breakTime, SESSION, sessionLength, sessionTime, timerStatus, timerLabel, timeLeft } from './app.js';
+import { BREAK, breakLength, breakTime, SESSION, sessionLength, sessionTime, clockStatus, timerLabel, timeLeft } from './app.js';
 export class TimeLength {
     constructor(length) {
         this.length = length;
@@ -21,13 +21,13 @@ export class Render {
         return breakLength.textContent = `${breakTime.getLength()}`;
     }
     static timerLabel() {
-        return timerLabel.textContent = `${timerStatus.timerType()[0].toUpperCase()}${timerStatus.timerType().slice(1)}`;
+        return timerLabel.textContent = `${clockStatus.timerType()[0].toUpperCase()}${clockStatus.timerType().slice(1)}`;
     }
     static timer() {
-        return timerStatus.timerDuration() < 10 ? timeLeft.textContent = `0${timerStatus.timerDuration()}:00` :
-            timeLeft.textContent = `${timerStatus.timerDuration()}:00`;
+        return clockStatus.timerDuration() < 10 ? timeLeft.textContent = `0${clockStatus.timerDuration()}:00` :
+            timeLeft.textContent = `${clockStatus.timerDuration()}:00`;
     }
-    static onLoad() {
+    static allValues() {
         this.timer();
         this.break();
         this.session();

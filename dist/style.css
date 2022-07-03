@@ -13,6 +13,20 @@ body {
     width: 70%;
 }
 
+.social-icon {
+    text-decoration: none;
+    color: inherit;
+}
+
+.social-icon:hover {
+    color: rgb(143, 143, 143);
+    transition: color 0.2s ease-in;
+}
+
+.credits {
+    font-size: 0.7rem;
+}
+
 .visibilityClass {
     visibility: hidden;
 }

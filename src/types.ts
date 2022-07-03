@@ -24,7 +24,7 @@ interface TimerEffectsInter {
     hide: Function
 }
 
-interface TimerStatusInter {
+interface ClockStatusInter {
     status: Status,
     timerType: Function,
     timerDuration: Function
@@ -33,5 +33,5 @@ interface TimerStatusInter {
 export {
     DefaultTimes, Status,
     TimerType, Effects, OnOff, SetTimeID, NumOrStr,
-    BreakSessionInter, TimerEffectsInter, TimerStatusInter
+    BreakSessionInter, TimerEffectsInter, ClockStatusInter
 }

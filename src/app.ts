@@ -1,6 +1,6 @@
 import { TimeLength, Timer, Render } from './classes.js'
 import { DefaultTimes, Status, TimerType, Effects, OnOff, SetTimeID,
-    BreakSessionInter, TimerEffectsInter, TimerStatusInter
+    BreakSessionInter, TimerEffectsInter, ClockStatusInter
 } from './types.js'
 
 const sessionBreak = document.querySelectorAll('.session-break')
@@ -43,7 +43,7 @@ const ctrlBreakSession: BreakSessionInter = {
     }
 }
 
-const timerStatus: TimerStatusInter = {
+const clockStatus: ClockStatusInter = {
     status: Status.NotStarted,
     timerType: (): TimerType => timer.getType(),
     timerDuration: (): number => timer.getDuration()
@@ -56,21 +56,19 @@ const changeTimerLength = (option: string): Render => {
         sessionType = BREAK
     }
     ctrlBreakSession[sessionType](option)
-    minutes = timerStatus.timerDuration()
+    minutes = clockStatus.timerDuration()
     return Render.timer()
 }
 
-const handleChanges = (option: string): void => {
-    if (timerStatus.status === 1) {
+const handleChanges = (option: string): Render => {
+    if (clockStatus.status === 1) {
         if(option.includes(BREAK)) {
             return ctrlBreakSession[BREAK](option)
         }
         seconds = 0
     }
-    /**
-     * Set a warning(tooltips or something) so the user knows it's gonna restart the timer
-    **/
-    changeTimerLength(option)
+
+    return changeTimerLength(option)
 }
 
 sessionBreak.forEach(button => button.addEventListener('click', (): void => {
@@ -87,7 +85,7 @@ const audioHandler = (stop: boolean) => {
     return warningAudio.play()
 }
 
-const timerEffects = (effect: Effects, sousEffect: OnOff, src?: string): Function => {
+const timerEffects = (effect: Effects, mode: OnOff, src?: string): Function => {
 
     const btnEffects: TimerEffectsInter = {
         disable: (status: OnOff): boolean => {
@@ -110,7 +108,7 @@ const timerEffects = (effect: Effects, sousEffect: OnOff, src?: string): Functio
         btnEffects[DISABLE]('off')
     }
 
-    return btnEffects[effect](sousEffect)
+    return btnEffects[effect](mode)
 }
 
 const clearTimeIDs = (timeID: string): SetTimeID => {
@@ -126,7 +124,7 @@ const timerRunning = (): Render => {
 
     const switchSessions = (): SetTimeID => {
         timer.switchType()
-        minutes = timerStatus.timerDuration()
+        minutes = clockStatus.timerDuration()
         inTimerID = setInterval(timerRunning, 1000)
         timerEffects(DISABLE, 'off')
         return clearTimeIDs('outTimerID')
@@ -152,7 +150,7 @@ const handleTimer = (): void => {
         setTimeout(timerRunning, 200)
         inTimerID = setInterval(timerRunning, 1000)
         timerEffects(HIDE, 'on')
-        timerStatus.status = Status.InProgress
+        clockStatus.status = Status.InProgress
     } else {
         clearTimeIDs('inTimerID')
         timerEffects(HIDE, 'off')
@@ -165,8 +163,8 @@ const loadValues = (): Render => {
     sessionTime = new TimeLength(DefaultTimes.Session)
     breakTime = new TimeLength(DefaultTimes.Break)
     timer = new Timer(SESSION, sessionTime)
-    minutes = timerStatus.timerDuration()
-    return Render.onLoad()
+    minutes = clockStatus.timerDuration()
+    return Render.allValues()
 }
 
 window.addEventListener('load', loadValues)
@@ -178,7 +176,7 @@ const resetTimer = (): void => {
     loadValues()
     audioHandler(true)
     timerEffects(HIDE, 'off', 'reset')
-    timerStatus.status = Status.NotStarted
+    clockStatus.status = Status.NotStarted
 }
 
 reset.addEventListener('click', resetTimer)
@@ -186,6 +184,6 @@ reset.addEventListener('click', resetTimer)
 export {
     BREAK, breakLength, breakTime,
     SESSION, sessionLength, sessionTime,
-    timerStatus, timerLabel, timeLeft
+    clockStatus, timerLabel, timeLeft
 }
 
